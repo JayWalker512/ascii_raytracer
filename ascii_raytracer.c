@@ -35,7 +35,10 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 typedef enum { false, true } bool;
 
+/***************************/
 /*** Vector related code ***/
+/***************************/
+
 typedef struct vec3_s {
 	float x;
 	float y;
@@ -78,7 +81,7 @@ vec3_t vector3(float x, float y, float z) {
 	return v;
 }
 
-vec3_t norm(vec3_t v) {
+vec3_t normalize(vec3_t v) {
 	float length = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 	v.x = v.x / length;
 	v.y = v.y / length;
@@ -110,7 +113,10 @@ float distance(vec3_t u, vec3_t v) {
 	return magnitude(difference(u,v));
 }
 
+/***************************/
 /*** Sphere related code ***/
+/***************************/
+
 typedef struct sphere_s {
 	float radius;
 	vec3_t center;
@@ -134,7 +140,7 @@ float raySphereIntersection(vec3_t origin, vec3_t heading, sphere_t sphere) {
 	//where a = (heading . (origin - sphere.center))^2
 	//where b = mag(origin - sphere.center)^2
 
-	heading = norm(heading);
+	heading = normalize(heading);
 
 	float a = pow(dot(heading, difference(origin, sphere.center)), 2.f);
 	float b = pow(magnitude(difference(origin, sphere.center)), 2.f);
@@ -147,7 +153,28 @@ float raySphereIntersection(vec3_t origin, vec3_t heading, sphere_t sphere) {
 	return -1.f;
 }
 
+/************************/
+/*** Point light code ***/
+/************************/
+
+typedef struct light_s {
+	vec3_t pos;
+	float intensity; //should be in [0,1]
+} light_t;
+
+light_t light(vec3_t pos, float intensity) {
+	light_t l;
+	l.pos.x = pos.x;
+	l.pos.y = pos.y;
+	l.pos.z = pos.z;
+	l.intensity = intensity;
+	return l;
+}
+
+/************************************/
 /*** ASCII pixel framebuffer code ***/
+/************************************/
+
 void setPixel(char * pixelArray, char columns, char rows, int x, int y, char character) {
 	if ( x > columns || x < 0 ) {
 		return;
@@ -192,6 +219,38 @@ void clearPixels(char * pixels, char columns, char rows) {
 	for (int i = 0; i < columns * rows; i++) {
 		pixels[i] = ' ';
 	}
+}
+
+/************************************************/
+/*** Ray Tracing abstractions in this section ***/
+/************************************************/
+
+//returns the intensity of the pixel through which the ray was traced
+float traceRay(vec3_t origin, vec3_t heading, sphere_t * spheres, int numSpheres, light_t * lights, int numLights) {
+	/* Need to check for intersections with all spheres, and track
+	 * which intersection is nearest to the origin of the ray. */
+
+	heading = normalize(heading);
+
+	int nearestIndex = -1;
+	float nearestParam = 99999.f;
+	for (int i = 0; i < numSpheres; i++) {
+		float f = raySphereIntersection(origin, heading, spheres[i]);
+		if (f < nearestParam) {
+			nearestParam = f;
+			nearestIndex = i;
+		} 
+	}
+
+	if (nearestIndex = -1) {
+		return 0.f;
+	}
+
+	//float dist = magnitude(difference(vec3Lerp(heading, f), origin));
+
+	//Now we need to trace rays from the intersection to all
+	//un-occluded lights and add up their contributed intensities.
+
 }
 
 int main() {
