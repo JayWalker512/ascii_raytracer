@@ -35,6 +35,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 typedef enum { false, true } bool;
 
+/*** Vector related code ***/
 typedef struct vec3_s {
 	float x;
 	float y;
@@ -109,6 +110,7 @@ float distance(vec3_t u, vec3_t v) {
 	return magnitude(difference(u,v));
 }
 
+/*** Sphere related code ***/
 typedef struct sphere_s {
 	float radius;
 	vec3_t center;
@@ -145,6 +147,7 @@ float raySphereIntersection(vec3_t origin, vec3_t heading, sphere_t sphere) {
 	return -1.f;
 }
 
+/*** ASCII pixel framebuffer code ***/
 void setPixel(char * pixelArray, char columns, char rows, int x, int y, char character) {
 	if ( x > columns || x < 0 ) {
 		return;
@@ -167,7 +170,6 @@ void printPixels(char * pixelArray, char columns, char rows) {
 		//memcpy(str, pixelArray[y * columns], columns);
 		puts(str);
 	}
-	usleep(50000);
 
 	//print a row of spaces to separate 'frames'
 	for (char y = 0; y < columns; y++) {
@@ -175,14 +177,14 @@ void printPixels(char * pixelArray, char columns, char rows) {
 	}
 	puts(str);
 	puts(str);
-	puts(str);
-	puts(str);
+	//puts(str);
+	//puts(str);
 }
 
 //intensity is 0-255
 char charShade(unsigned char intensity) {
-	const int levels = 10;
-	char shades[10] = " .,:;ox%#@";
+	const int levels = 11;
+	char shades[11] = " .,:;ox%&#@";
 	return shades[(255-intensity)*levels/256];
 }
 
@@ -203,6 +205,8 @@ int main() {
 	float t = 0;
 
 	while ( true ) {
+
+		usleep(100000);
 
 		//animate the sphere
 		s = sphere(0.f, 0.f, 4.f + sin(t), 2.f);
