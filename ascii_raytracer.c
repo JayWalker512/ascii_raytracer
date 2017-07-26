@@ -30,6 +30,9 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <math.h>
 #include <unistd.h>
 
+#define COLUMNS 40
+#define ROWS 20
+
 typedef enum { false, true } bool;
 
 typedef struct vec3_s {
@@ -100,6 +103,10 @@ vec3_t sum(vec3_t u, vec3_t v) {
 
 vec3_t difference(vec3_t u, vec3_t v) {
 	return sum(u, vector3(-v.x, -v.y, -v.z));
+}
+
+float distance(vec3_t u, vec3_t v) {
+	return magnitude(difference(u,v));
 }
 
 typedef struct sphere_s {
@@ -185,118 +192,55 @@ void clearPixels(char * pixels, char columns, char rows) {
 	}
 }
 
-#define COLUMNS 40
-#define ROWS 20
-
-void main() {
+int main() {
 	char pixels[COLUMNS * ROWS];
 
-	/*for (int i = 0; i < COLUMNS * ROWS; i++) {
-		pixels[i] = charShade(shades, 10, ((i % COLUMNS) / (float)COLUMNS) * 255);
-	}*/
-
-	/*for (char y = 0; y < ROWS; y++) {
-		for (char x = 0; x < COLUMNS; x++) {
-			setPixel(pixels, COLUMNS, ROWS, x, y, charShade(shades, 10, (x % 10) * (256 / 10.0))); 
-		}
-	}*/
-
-	/*for (int i = 0; i < COLUMNS * ROWS; i++) {
-		pixels[i] = ' ';
-	}
-
-	for (int x = 0; x < COLUMNS; x++) {
-		//draw an exponential curve
-		setPixel(pixels, COLUMNS, ROWS, x, (int)pow((double)(x - 20), 2.f), '#');
-		
-		//draw a line
-		//setPixel(pixels, COLUMNS, ROWS, x, x, '.');
-		
-		//draw a big circle section
-		setPixel(pixels, COLUMNS, ROWS, x, ROWS * sqrt(1.0 - pow((x / (float)COLUMNS), 2)), '@');
-		
-		//draw a smaller circle section
-		setPixel(pixels, COLUMNS, ROWS, x, (ROWS / 2.0) * sqrt(1.0 - pow((x / ((float)COLUMNS / 2.0)), 2)), '@');
-	}
-
-	printPixels(pixels, COLUMNS, ROWS);*/
-
-	/*clearPixels(pixels, COLUMNS, ROWS);
-
-	float t = 0.0;
-	while ( 1 ) {
-		clearPixels(pixels, COLUMNS, ROWS);
-
-		//move a pixel around in a circle
-		//(x,y) = (r*cos(t),r*sin(t))
-		setPixel(pixels, COLUMNS, ROWS, (COLUMNS / 2.0) + (int)10.0*cos(t), (ROWS / 2.0) + (int)10.0*sin(t), '@');
-		setPixel(pixels, COLUMNS, ROWS, (COLUMNS / 2.0) + (int)5.0*cos(t), (ROWS / 2.0) + (int)5.0*sin(t), '.');
-		//setPixel(pixels, COLUMNS, ROWS, (COLUMNS / 2.0) + (int)10.0*cos(t - 1.5), (ROWS / 2.0) + (int)10.0*sin(t - 1.5), ' ');
-		//setPixel(pixels, COLUMNS, ROWS, (COLUMNS / 2.0) + (int)5.0*cos(t - 1.5), (ROWS / 2.0) + (int)5.0*sin(t - 1.5), ' ');		
-		t += 0.1; //(6.28 / 90.0);
-
-		printPixels(pixels, COLUMNS, ROWS);
-	}*/
-
-	//silly vector test
-	/*vec3_t vec;
-	vec.x = 0.f;
-	vec.y = 0.f;
-	vec.z = 1.f;
-	vec = norm(vec);
-	printVec(vec, "vector");
-
-	vec3_t vec2;
-	vec2.x = 0.f;
-	vec2.y = 1.f;
-	vec2.z = 1.f;
-
-	vec3_t up = vector3FromTo(vec, vec2);
-	printVec(up, "up");
-
-	vec2 = norm(vec2);
-
-	vec3_t p = vecLerpBetween(vec, vec2, 0.5f);
-	printVec(p, "lerp");
-
-	printf("angle: %f\n", asin(dot(vec, vec2)) * (180.0 / 3.14));
-	*/
-
-	//checking intersection detection code
 	sphere_t s = sphere(0.f, 0.f, 3.f, 2.f);
 	vec3_t v = vector3(0.f, 0.f, 1.f);
 	float f = raySphereIntersection(vector3(0.f, 0.f, 0.f), v, s);
 	//printf("f: %f\n", f);
 
-	for (int x = 0; x < COLUMNS; x++) {
-		for (int y = 0; y < ROWS; y++) {
-			//calculate the origin of the ray for orthographic projection
-			float xCoord = 2.f * ((float)x / (float)(COLUMNS - 1)) - 1.f;
-			float yCoord = 2.f * ((float)y / (float)(ROWS - 1)) - 1.f;
-			printf("x: %f, y: %f\n", xCoord, yCoord);
+	float t = 0;
 
-			//orthographic vectors
-			//vec3_t origin = vector3(xCoord, yCoord, 0.f);
-			//vec3_t heading = vector3(0.f, 0.f, 1.f);
+	while ( true ) {
 
-			//perspective vectors
-			vec3_t origin = vector3(0.f, 0.f, 0.f);
-			vec3_t heading = vector3(xCoord, yCoord, 1.f);
-			f = raySphereIntersection(origin, heading, s);
-			char c = ' ';
-			if (f >= 0) {
-				//dist = magnitude((heading * f) - origin);
-				float dist = magnitude(difference(vec3Lerp(heading, f), origin));
-				if (dist <= 5.f ) {
-					c = charShade((unsigned char)((dist / 5.f) * 255));
-				} 
-				printf("dist: %f\n", dist);
+		//animate the sphere
+		s = sphere(0.f, 0.f, 4.f + sin(t), 2.f);
+		t += 6.28 / 30.0;
+
+		clearPixels(pixels, COLUMNS, ROWS);
+
+		for (int x = 0; x < COLUMNS; x++) {
+			for (int y = 0; y < ROWS; y++) {
+				//calculate the origin of the ray for orthographic projection
+				float xCoord = 2.f * ((float)x / (float)(COLUMNS - 1)) - 1.f;
+				float yCoord = 2.f * ((float)y / (float)(ROWS - 1)) - 1.f;
+				//printf("x: %f, y: %f\n", xCoord, yCoord);
+
+				//orthographic vectors
+				//vec3_t origin = vector3(xCoord, yCoord, 0.f);
+				//vec3_t heading = vector3(0.f, 0.f, 1.f);
+
+				//perspective vectors
+				vec3_t origin = vector3(0.f, 0.f, 0.f);
+				vec3_t heading = vector3(xCoord, yCoord, 1.f);
+				f = raySphereIntersection(origin, heading, s);
+				char c = ' ';
+				if (f >= 0) {
+					//dist = magnitude((heading * f) - origin);
+					float dist = magnitude(difference(vec3Lerp(heading, f), origin));
+					float maxDist = 10.f;
+					if (dist <= maxDist ) {
+						c = charShade((unsigned char)(255 - (255.f / pow(dist, 2.f))));  //((dist / 10.f) * 255));
+					}
+					//printf("dist: %f\n", dist);
+				}
+				setPixel(pixels, COLUMNS, ROWS, x, y, c);
 			}
-			setPixel(pixels, COLUMNS, ROWS, x, y, c);
 		}
+
+		printPixels(pixels, COLUMNS, ROWS);
 	}
 
-	printPixels(pixels, COLUMNS, ROWS);
-
-	return;
+	return 0;
 }
