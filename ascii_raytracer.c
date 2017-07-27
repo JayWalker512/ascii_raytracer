@@ -175,7 +175,7 @@ light_t light(vec3_t pos, float intensity) {
 /*** ASCII pixel framebuffer code ***/
 /************************************/
 
-void setPixel(char * pixelArray, char columns, char rows, int x, int y, char character) {
+void setPixel(char * pixelArray, unsigned char columns, unsigned char rows, int x, int y, char character) {
 	if ( x > columns || x < 0 ) {
 		return;
 	}
@@ -187,11 +187,11 @@ void setPixel(char * pixelArray, char columns, char rows, int x, int y, char cha
 	pixelArray[(y * columns) + x] = character;
 } 
 
-void printPixels(char * pixelArray, char columns, char rows) {
+void printPixels(char * pixelArray, unsigned char columns, unsigned char rows) {
 	char str[columns + 1];
 	str[columns] = 0;
-	for (char y = 0; y < rows; y++) {
-		for (char x = 0; x < columns; x++) {
+	for (unsigned char y = 0; y < rows; y++) {
+		for (unsigned char x = 0; x < columns; x++) {
 			str[x] = pixelArray[(y * columns) + x]; 
 		}
 		//memcpy(str, pixelArray[y * columns], columns);
@@ -199,7 +199,7 @@ void printPixels(char * pixelArray, char columns, char rows) {
 	}
 
 	//print a row of spaces to separate 'frames'
-	for (char y = 0; y < columns; y++) {
+	for (unsigned char y = 0; y < columns; y++) {
 		str[y] = ' ';
 	}
 	puts(str);
@@ -210,12 +210,12 @@ void printPixels(char * pixelArray, char columns, char rows) {
 
 //intensity is 0-255
 char charShade(unsigned char intensity) {
-	const int levels = 11;
-	char shades[11] = " .,:;ox%&#@";
+	const int levels = 12;
+	char shades[12] = " .,:;+ox%&#@";
 	return shades[(255-intensity)*levels/256];
 }
 
-void clearPixels(char * pixels, char columns, char rows) {
+void clearPixels(char * pixels, unsigned char columns, unsigned char rows) {
 	for (int i = 0; i < columns * rows; i++) {
 		pixels[i] = ' ';
 	}
@@ -242,25 +242,34 @@ float traceRay(vec3_t origin, vec3_t heading, sphere_t * spheres, int numSpheres
 		} 
 	}
 
-	if (nearestIndex = -1) {
+	if (nearestIndex == -1) {
 		return 0.f;
 	}
+
+	vec3_t pointOfIntersection = sum(vec3Lerp(heading, nearestParam), origin);
 
 	//float dist = magnitude(difference(vec3Lerp(heading, f), origin));
 
 	//Now we need to trace rays from the intersection to all
 	//un-occluded lights and add up their contributed intensities.
+	for (int i = 0; i < numLights; i++) {
+		vec3_t lightHeading = vector3FromTo(pointOfIntersection, lights[i].pos);
+		//perhaps this part should re-use the sphere intersection test above as part of a separate function?
+	}
 
+	return 0.f; //yeah actually send a value here
 }
 
 int main() {
 	char pixels[COLUMNS * ROWS];
 
-	sphere_t s = sphere(0.f, 0.f, 3.f, 2.f);
-	vec3_t v = vector3(0.f, 0.f, 1.f);
-	float f = raySphereIntersection(vector3(0.f, 0.f, 0.f), v, s);
-	//printf("f: %f\n", f);
+	const int numSpheres = 1;
+	sphere_t spheres[numSpheres];
+	spheres[0] = sphere(0.f, 0.f, 3.f, 2.f);
 
+	const int numLights = 1;
+	light_t lights[numLights];
+	lights[0] = light(vector3(-2.f, 0.f, 0.f), 1.f);
 	float t = 0;
 
 	while ( true ) {
@@ -268,7 +277,7 @@ int main() {
 		usleep(100000);
 
 		//animate the sphere
-		s = sphere(0.f, 0.f, 4.f + sin(t), 2.f);
+		spheres[0] = sphere(0.f, 0.f, 4.f + sin(t), 2.f);
 		t += 6.28 / 30.0;
 
 		clearPixels(pixels, COLUMNS, ROWS);
@@ -287,7 +296,7 @@ int main() {
 				//perspective vectors
 				vec3_t origin = vector3(0.f, 0.f, 0.f);
 				vec3_t heading = vector3(xCoord, yCoord, 1.f);
-				f = raySphereIntersection(origin, heading, s);
+				float f = raySphereIntersection(origin, heading, spheres[0]);
 				char c = ' ';
 				if (f >= 0) {
 					//dist = magnitude((heading * f) - origin);
