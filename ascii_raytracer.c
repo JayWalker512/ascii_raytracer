@@ -270,11 +270,14 @@ float traceRay(vec3_t origin, vec3_t heading, sphere_t * spheres, int numSpheres
 	}
 
 	vec3_t pointOfIntersection = sum(vec3Lerp(heading, nearestParam), origin);
+	vec3_t surfaceNormal = normalize(vector3FromTo(spheres[nearestIndex].center, pointOfIntersection));
+
+	float shadowBias = 0.001f;
+	pointOfIntersection = sum(pointOfIntersection, vec3Lerp(surfaceNormal, shadowBias));
 
 	//Now we need to trace rays from the intersection to all
 	//un-occluded lights and add up their contributed intensities.
 	float intensity = 0.f;
-	vec3_t surfaceNormal = normalize(vector3FromTo(spheres[nearestIndex].center, pointOfIntersection));
 	for (int i = 0; i < numLights; i++) {
 		vec3_t lightHeading = normalize(vector3FromTo(pointOfIntersection, lights[i].pos));
 		bool obscured = false;
@@ -290,7 +293,9 @@ float traceRay(vec3_t origin, vec3_t heading, sphere_t * spheres, int numSpheres
 		//we add it's contribution to the intensity at that pixel.
 		if (false == obscured) {
 			float reflectionCoefficient = dot(normalize(surfaceNormal), normalize(lightHeading));
-			intensity += reflectionCoefficient * lights[i].intensity * (1/(pow(distance(pointOfIntersection, lights[i].pos), 2)));
+			if (reflectionCoefficient > 0.f) {
+				intensity += reflectionCoefficient * lights[i].intensity * (1/(pow(distance(pointOfIntersection, lights[i].pos), 2)));
+			}
 		}
 	}
 
@@ -303,11 +308,17 @@ int main() {
 	const int numSpheres = 2;
 	sphere_t spheres[numSpheres];
 	spheres[0] = sphere(0.f, 0.f, 3.f, 2.f);
-	spheres[1] = sphere(-0.75f, 0.f, 1.5f, 0.25f);
 
-	const int numLights = 1;
+	const int numLights = 2;
 	light_t lights[numLights];
 	lights[0] = light(vector3(-1.f, 0.f, 0.f), 1.f);
+	lights[1] = light(vector3(-2.f, 0.f, 0.f), 1.f);
+	
+	//vec3_t sphereToLight = vector3FromTo(spheres[0].center, lights[0].pos);
+	//vec3_t secondSphere = vec3Lerp(sphereToLight, 0.6f);
+	vec3_t secondSphere = vector3(-0.5f, 0.f, 1.5f);
+	spheres[1] = sphere(secondSphere.x, secondSphere.y, secondSphere.z, 0.25f);
+
 	float t = 0;
 
 	//while ( true ) {
