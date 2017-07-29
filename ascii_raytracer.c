@@ -30,8 +30,8 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <math.h>
 #include <unistd.h>
 
-#define COLUMNS 40
-#define ROWS 20
+#define COLUMNS 255
+#define ROWS 255
 
 typedef enum { false, true } bool;
 
@@ -221,6 +221,25 @@ void clearPixels(char * pixels, unsigned char columns, unsigned char rows) {
 	}
 }
 
+/***********************/
+/*** PGM output code ***/
+/***********************/
+
+void printPGM(char * pixels, unsigned char columns, unsigned char rows) {
+	printf("P2\n");
+	printf("%d %d\n", columns, rows);
+	printf("255\n");
+	//char str[columns + 1];
+	//str[columns] = 0;
+	for (unsigned char y = 0; y < rows; y++) {
+		for (unsigned char x = 0; x < columns; x++) {
+			printf("%d ", (unsigned char)pixels[(y * columns) + x]); 
+		}
+		printf("\n");
+	}
+}
+
+
 /************************************************/
 /*** Ray Tracing abstractions in this section ***/
 /************************************************/
@@ -272,7 +291,7 @@ int main() {
 	lights[0] = light(vector3(-2.f, 0.f, 0.f), 1.f);
 	float t = 0;
 
-	while ( true ) {
+	//while ( true ) {
 
 		usleep(100000);
 
@@ -303,7 +322,8 @@ int main() {
 					float dist = magnitude(difference(vec3Lerp(heading, f), origin));
 					float maxDist = 10.f;
 					if (dist <= maxDist ) {
-						c = charShade((unsigned char)(255 - (255.f / pow(dist, 2.f))));  //((dist / 10.f) * 255));
+						//c = charShade((unsigned char)(255 - (255.f / pow(dist, 2.f))));  //((dist / 10.f) * 255));
+						c = (unsigned char)(255.f / pow(dist, 2.f));
 					}
 					//printf("dist: %f\n", dist);
 				}
@@ -311,8 +331,10 @@ int main() {
 			}
 		}
 
-		printPixels(pixels, COLUMNS, ROWS);
-	}
+		//printPixels(pixels, COLUMNS, ROWS);
+		printPGM(pixels, COLUMNS, ROWS);
+
+	//}
 
 	return 0;
 }
