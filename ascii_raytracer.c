@@ -147,7 +147,10 @@ float raySphereIntersection(vec3_t origin, vec3_t heading, sphere_t sphere) {
 	float underSqrt = sqrt(a - b + pow(sphere.radius, 2));
 
 	if (underSqrt >= 0) {
-		return -(dot(heading, difference(origin, sphere.center))) - underSqrt;
+		//float plus = -(dot(heading, difference(origin, sphere.center))) + underSqrt;
+		float minus = -(dot(heading, difference(origin, sphere.center))) - underSqrt;
+		//return fmaxf(plus, minus);
+		return minus;
 	}
 
 	return -1.f;
@@ -217,7 +220,8 @@ char charShade(unsigned char intensity) {
 
 void clearPixels(char * pixels, unsigned char columns, unsigned char rows) {
 	for (int i = 0; i < columns * rows; i++) {
-		pixels[i] = ' ';
+		//pixels[i] = ' ';
+		pixels[i] = 0;
 	}
 }
 
@@ -228,7 +232,7 @@ void clearPixels(char * pixels, unsigned char columns, unsigned char rows) {
 void printPGM(char * pixels, unsigned char columns, unsigned char rows) {
 	printf("P2\n");
 	printf("%d %d\n", columns, rows);
-	printf("255\n");
+	printf("256\n");
 	//char str[columns + 1];
 	//str[columns] = 0;
 	for (unsigned char y = 0; y < rows; y++) {
@@ -255,7 +259,7 @@ float traceRay(vec3_t origin, vec3_t heading, sphere_t * spheres, int numSpheres
 	float nearestParam = 99999.f;
 	for (int i = 0; i < numSpheres; i++) {
 		float f = raySphereIntersection(origin, heading, spheres[i]);
-		if (f < nearestParam) {
+		if (f > 0.f && f < nearestParam) {
 			nearestParam = f;
 			nearestIndex = i;
 		} 
@@ -267,28 +271,43 @@ float traceRay(vec3_t origin, vec3_t heading, sphere_t * spheres, int numSpheres
 
 	vec3_t pointOfIntersection = sum(vec3Lerp(heading, nearestParam), origin);
 
-	//float dist = magnitude(difference(vec3Lerp(heading, f), origin));
-
 	//Now we need to trace rays from the intersection to all
 	//un-occluded lights and add up their contributed intensities.
+	float intensity = 0.f;
+	vec3_t surfaceNormal = normalize(vector3FromTo(spheres[nearestIndex].center, pointOfIntersection));
 	for (int i = 0; i < numLights; i++) {
-		vec3_t lightHeading = vector3FromTo(pointOfIntersection, lights[i].pos);
-		//perhaps this part should re-use the sphere intersection test above as part of a separate function?
+		vec3_t lightHeading = normalize(vector3FromTo(pointOfIntersection, lights[i].pos));
+		bool obscured = false;
+		for (int k = 0; k < numSpheres; k++) {
+			if (0.f < raySphereIntersection(pointOfIntersection, lightHeading, spheres[k])) {
+				//if there IS an intersection, the light is obscured and contributes no intensity
+				obscured = true;
+				continue;
+			}
+		}	
+
+		//if the ray from the intersection point to the light is not obscured, 
+		//we add it's contribution to the intensity at that pixel.
+		if (false == obscured) {
+			float reflectionCoefficient = dot(normalize(surfaceNormal), normalize(lightHeading));
+			intensity += reflectionCoefficient * lights[i].intensity * (1/(pow(distance(pointOfIntersection, lights[i].pos), 2)));
+		}
 	}
 
-	return 0.f; //yeah actually send a value here
+	return intensity; 
 }
 
 int main() {
-	char pixels[COLUMNS * ROWS];
+	char pixels[COLUMNS * ROWS] = { 0 };
 
-	const int numSpheres = 1;
+	const int numSpheres = 2;
 	sphere_t spheres[numSpheres];
 	spheres[0] = sphere(0.f, 0.f, 3.f, 2.f);
+	spheres[1] = sphere(-0.75f, 0.f, 1.5f, 0.25f);
 
 	const int numLights = 1;
 	light_t lights[numLights];
-	lights[0] = light(vector3(-2.f, 0.f, 0.f), 1.f);
+	lights[0] = light(vector3(-1.f, 0.f, 0.f), 1.f);
 	float t = 0;
 
 	//while ( true ) {
@@ -315,18 +334,25 @@ int main() {
 				//perspective vectors
 				vec3_t origin = vector3(0.f, 0.f, 0.f);
 				vec3_t heading = vector3(xCoord, yCoord, 1.f);
-				float f = raySphereIntersection(origin, heading, spheres[0]);
+				//float f = raySphereIntersection(origin, heading, spheres[0]);
 				char c = ' ';
-				if (f >= 0) {
+				//if (f >= 0) {
 					//dist = magnitude((heading * f) - origin);
-					float dist = magnitude(difference(vec3Lerp(heading, f), origin));
-					float maxDist = 10.f;
-					if (dist <= maxDist ) {
+					//float dist = magnitude(difference(vec3Lerp(heading, f), origin));
+					//float maxDist = 10.f;
+					//if (dist <= maxDist ) {
 						//c = charShade((unsigned char)(255 - (255.f / pow(dist, 2.f))));  //((dist / 10.f) * 255));
-						c = (unsigned char)(255.f / pow(dist, 2.f));
-					}
+						//c = (unsigned char)(255.f / pow(dist, 2.f));
+						c = 255 * traceRay(origin, heading, spheres, numSpheres, lights, numLights);
+						/*printf("%d ", (unsigned char)c);
+						if ((unsigned char)c == 255) {
+							printVec(origin, "origin");
+							printVec(heading, "heading");
+							puts("what the dicks");
+						}*/
+					//}
 					//printf("dist: %f\n", dist);
-				}
+				//}
 				setPixel(pixels, COLUMNS, ROWS, x, y, c);
 			}
 		}
