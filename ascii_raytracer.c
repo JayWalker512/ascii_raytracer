@@ -30,8 +30,8 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <math.h>
 #include <unistd.h>
 
-#define COLUMNS 500
-#define ROWS 500
+#define COLUMNS 40
+#define ROWS 40
 
 typedef enum { false, true } bool;
 
@@ -197,7 +197,6 @@ void printPixels(char * pixelArray, unsigned int columns, unsigned int rows) {
 		for (unsigned int x = 0; x < columns; x++) {
 			str[x] = pixelArray[(y * columns) + x]; 
 		}
-		//memcpy(str, pixelArray[y * columns], columns);
 		puts(str);
 	}
 
@@ -333,32 +332,11 @@ int main(int argc, char * argv[]) {
 				float yCoord = 2.f * ((float)y / (float)(ROWS - 1)) - 1.f;
 				//printf("x: %f, y: %f\n", xCoord, yCoord);
 
-				//orthographic vectors
-				//vec3_t origin = vector3(xCoord, yCoord, 0.f);
-				//vec3_t heading = vector3(0.f, 0.f, 1.f);
-
 				//perspective vectors
 				vec3_t origin = vector3(0.f, 0.f, 0.f);
 				vec3_t heading = vector3(xCoord, yCoord, 1.f);
-				//float f = raySphereIntersection(origin, heading, spheres[0]);
 				char c = ' ';
-				//if (f >= 0) {
-					//dist = magnitude((heading * f) - origin);
-					//float dist = magnitude(difference(vec3Lerp(heading, f), origin));
-					//float maxDist = 10.f;
-					//if (dist <= maxDist ) {
-						//c = charShade((unsigned char)(255 - (255.f / pow(dist, 2.f))));  //((dist / 10.f) * 255));
-						//c = (unsigned char)(255.f / pow(dist, 2.f));
-						c = 255 * traceRay(origin, heading, spheres, numSpheres, lights, numLights);
-						/*printf("%d ", (unsigned char)c);
-						if ((unsigned char)c == 255) {
-							printVec(origin, "origin");
-							printVec(heading, "heading");
-							puts("what the dicks");
-						}*/
-					//}
-					//printf("dist: %f\n", dist);
-				//}
+				c = 255 * traceRay(origin, heading, spheres, numSpheres, lights, numLights);
 				setPixel(pixels, COLUMNS, ROWS, x, y, c);
 			}
 		}
