@@ -30,8 +30,8 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <math.h>
 #include <unistd.h>
 
-#define COLUMNS 255
-#define ROWS 255
+#define COLUMNS 500
+#define ROWS 500
 
 typedef enum { false, true } bool;
 
@@ -178,7 +178,7 @@ light_t light(vec3_t pos, float intensity) {
 /*** ASCII pixel framebuffer code ***/
 /************************************/
 
-void setPixel(char * pixelArray, unsigned char columns, unsigned char rows, int x, int y, char character) {
+void setPixel(char * pixelArray, unsigned int columns, unsigned int rows, int x, int y, char character) {
 	if ( x > columns || x < 0 ) {
 		return;
 	}
@@ -190,11 +190,11 @@ void setPixel(char * pixelArray, unsigned char columns, unsigned char rows, int 
 	pixelArray[(y * columns) + x] = character;
 } 
 
-void printPixels(char * pixelArray, unsigned char columns, unsigned char rows) {
+void printPixels(char * pixelArray, unsigned int columns, unsigned int rows) {
 	char str[columns + 1];
 	str[columns] = 0;
-	for (unsigned char y = 0; y < rows; y++) {
-		for (unsigned char x = 0; x < columns; x++) {
+	for (unsigned int y = 0; y < rows; y++) {
+		for (unsigned int x = 0; x < columns; x++) {
 			str[x] = pixelArray[(y * columns) + x]; 
 		}
 		//memcpy(str, pixelArray[y * columns], columns);
@@ -202,13 +202,11 @@ void printPixels(char * pixelArray, unsigned char columns, unsigned char rows) {
 	}
 
 	//print a row of spaces to separate 'frames'
-	for (unsigned char y = 0; y < columns; y++) {
+	for (unsigned int y = 0; y < columns; y++) {
 		str[y] = ' ';
 	}
 	puts(str);
 	puts(str);
-	//puts(str);
-	//puts(str);
 }
 
 //intensity is 0-255
@@ -218,8 +216,8 @@ char charShade(unsigned char intensity) {
 	return shades[(255-intensity)*levels/256];
 }
 
-void clearPixels(char * pixels, unsigned char columns, unsigned char rows) {
-	for (int i = 0; i < columns * rows; i++) {
+void clearPixels(char * pixels, unsigned int columns, unsigned int rows) {
+	for (unsigned int i = 0; i < columns * rows; i++) {
 		//pixels[i] = ' ';
 		pixels[i] = 0;
 	}
@@ -229,14 +227,12 @@ void clearPixels(char * pixels, unsigned char columns, unsigned char rows) {
 /*** PGM output code ***/
 /***********************/
 
-void printPGM(char * pixels, unsigned char columns, unsigned char rows) {
+void printPGM(char * pixels, unsigned int columns, unsigned int rows) {
 	printf("P2\n");
 	printf("%d %d\n", columns, rows);
 	printf("256\n");
-	//char str[columns + 1];
-	//str[columns] = 0;
-	for (unsigned char y = 0; y < rows; y++) {
-		for (unsigned char x = 0; x < columns; x++) {
+	for (unsigned int y = 0; y < rows; y++) {
+		for (unsigned int x = 0; x < columns; x++) {
 			printf("%d ", (unsigned char)pixels[(y * columns) + x]); 
 		}
 		printf("\n");
@@ -302,7 +298,7 @@ float traceRay(vec3_t origin, vec3_t heading, sphere_t * spheres, int numSpheres
 	return intensity; 
 }
 
-int main() {
+int main(int argc, char * argv[]) {
 	char pixels[COLUMNS * ROWS] = { 0 };
 
 	const int numSpheres = 2;
@@ -321,9 +317,8 @@ int main() {
 
 	float t = 0;
 
-	//while ( true ) {
-
-		usleep(100000);
+	do {
+		//usleep(100000);
 
 		//animate the sphere
 		spheres[0] = sphere(0.f, 0.f, 4.f + sin(t), 2.f);
@@ -371,7 +366,7 @@ int main() {
 		//printPixels(pixels, COLUMNS, ROWS);
 		printPGM(pixels, COLUMNS, ROWS);
 
-	//}
+	} while (argc == 1);
 
 	return 0;
 }
