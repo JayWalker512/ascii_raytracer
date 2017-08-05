@@ -30,9 +30,6 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <math.h>
 #include <unistd.h>
 
-#define COLUMNS 40
-#define ROWS 40
-
 typedef enum { false, true } bool;
 
 /***************************/
@@ -298,51 +295,79 @@ float traceRay(vec3_t origin, vec3_t heading, sphere_t * spheres, int numSpheres
 }
 
 int main(int argc, char * argv[]) {
-	char pixels[COLUMNS * ROWS] = { 0 };
+	unsigned int columns = 20;
+	unsigned int rows = 20;
+	if (argc != 1) {
+		columns *= 100;
+		rows *= 100;
+	}
+
+	char pixels[columns * rows];
+	for (unsigned int i = 0; i < columns * rows; i++) {
+		pixels[i] = 0;
+	}
 
 	const int numSpheres = 2;
 	sphere_t spheres[numSpheres];
-	spheres[0] = sphere(0.f, 0.f, 3.f, 2.f);
+	spheres[0] = sphere(0.f, 0.f, 4.5f, 2.5f);
 
-	const int numLights = 2;
+	const int numLights = 1;
 	light_t lights[numLights];
 	lights[0] = light(vector3(-1.f, 0.f, 0.f), 1.f);
-	lights[1] = light(vector3(-2.f, 0.f, 0.f), 1.f);
+	//lights[1] = light(vector3(-2.f, 0.f, 0.f), 1.f);
 	
 	//vec3_t sphereToLight = vector3FromTo(spheres[0].center, lights[0].pos);
 	//vec3_t secondSphere = vec3Lerp(sphereToLight, 0.6f);
-	vec3_t secondSphere = vector3(-0.5f, 0.f, 1.5f);
-	spheres[1] = sphere(secondSphere.x, secondSphere.y, secondSphere.z, 0.25f);
+	//vec3_t secondSphere = vector3(-0.5f, 0.f, 0.5f);
+	//spheres[1] = sphere(secondSphere.x, secondSphere.y, secondSphere.z, 0.25f);
 
-	float t = 0;
+	float t = 4.5f;
 
 	do {
-		//usleep(100000);
+		
+		if (argc == 1) {
+			usleep(100000);
+		}
 
 		//animate the sphere
-		spheres[0] = sphere(0.f, 0.f, 4.f + sin(t), 2.f);
-		t += 6.28 / 30.0;
+		spheres[1] = sphere(3 * cos(t), 0.f, 4.5f + (3 * sin(t)), 0.25f);
+		t += 6.28 / 180.0;
 
-		clearPixels(pixels, COLUMNS, ROWS);
+		clearPixels(pixels, columns, rows);
 
-		for (int x = 0; x < COLUMNS; x++) {
-			for (int y = 0; y < ROWS; y++) {
+		for (int x = 0; x < columns; x++) {
+			for (int y = 0; y < rows; y++) {
 				//calculate the origin of the ray for orthographic projection
-				float xCoord = 2.f * ((float)x / (float)(COLUMNS - 1)) - 1.f;
-				float yCoord = 2.f * ((float)y / (float)(ROWS - 1)) - 1.f;
+				float xCoord = 2.f * ((float)x / (float)(columns - 1)) - 1.f;
+				float yCoord = 2.f * ((float)y / (float)(rows - 1)) - 1.f;
 				//printf("x: %f, y: %f\n", xCoord, yCoord);
 
 				//perspective vectors
 				vec3_t origin = vector3(0.f, 0.f, 0.f);
 				vec3_t heading = vector3(xCoord, yCoord, 1.f);
-				char c = ' ';
-				c = 255 * traceRay(origin, heading, spheres, numSpheres, lights, numLights);
-				setPixel(pixels, COLUMNS, ROWS, x, y, c);
+				
+				char c = 0;				
+				if (argc == 1) {
+					//this is the ascii path
+				
+					c = ' ';
+					c = charShade(255 - 255 * traceRay(origin, heading, spheres, numSpheres, lights, numLights));
+				} else {
+					//this is the PGM path
+
+					c = 0;
+					c = 255 * traceRay(origin, heading, spheres, numSpheres, lights, numLights);
+				}
+
+				setPixel(pixels, columns, rows, x, y, c);
 			}
 		}
 
-		//printPixels(pixels, COLUMNS, ROWS);
-		printPGM(pixels, COLUMNS, ROWS);
+		if (argc == 1) {
+			printPixels(pixels, columns, rows);	
+		} else {
+			printPGM(pixels, columns, rows);
+		}
 
 	} while (argc == 1);
 
