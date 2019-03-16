@@ -12,7 +12,7 @@ MIT licensed.
 demo
 ====
 
-Currently the program renders a small sphere orbiting a larger sphere. Something like this (will change a big as I work on things):
+Currently the program renders a small sphere orbiting a larger sphere. Something like this (will change a bit as I work on things):
 
 ASCII:
        
