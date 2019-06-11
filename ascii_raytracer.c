@@ -286,7 +286,9 @@ float traceRay(vec3_t origin, vec3_t heading, sphere_t * spheres, int numSpheres
 		if (false == obscured) {
 			float reflectionCoefficient = dot(normalize(surfaceNormal), normalize(lightHeading));
 			if (reflectionCoefficient > 0.f) {
-				intensity += reflectionCoefficient * lights[i].intensity * (1/(pow(distance(pointOfIntersection, lights[i].pos), 2)));
+				//Using equation 1/(1 + k*d^2) where k is just some constant that determines how rapidly the intensity falls off.
+				//This also solves the problem with a plain inverse square where intensity saturates when distance < 1.
+				intensity += reflectionCoefficient * lights[i].intensity * (1/(1 + 0.3f*pow(distance(pointOfIntersection, lights[i].pos), 2)));
 			}
 		}
 	}
