@@ -3,7 +3,7 @@ ascii raytracer
 
 This is a pet project to experiment with ray tracing. The goal is little more than to draw a simple scene with lighting and shadows in a terminal.
 
-Compile with `gcc ascii_raytracer.c -o ascii_raytracer -lm` and run with `./ascii_raytracer`.
+Compile with `make` and run with `./ascii_raytracer`.
 
 Alternatively if run with any command line arguments, for example `./ascii_raytracer 1` the program will output a large PGM file to STDOUT, which can be piped to a file and viewed easily. 
 
